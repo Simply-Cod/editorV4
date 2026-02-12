@@ -61,6 +61,15 @@ int main() {
                             view.curX--;
                         }
                         break;
+                    case LEFT:
+                        if (lineMoveLeft(&buff.current)) {
+                            view.curX--;
+                        }
+                        break;
+                    case RIGHT:
+                        if (lineMoveRight(&buff.current)) {
+                            view.curX++;
+                        }
                 }
 
                 break;

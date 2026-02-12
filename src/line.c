@@ -70,3 +70,43 @@ int lineRemoveChar(Line **line) {
 
     return 1;
 }
+
+int lineMoveLeft(Line **line) {
+    Line *tmp = *line;
+
+    if (tmp->arrPos <= 0) return 0;
+
+    tmp->arrPos--;
+
+    for (;;) {
+        if (tmp->arrPos <= 0) break;
+
+        if ((unsigned char)tmp->buffer[tmp->arrPos] >= 128 && (unsigned char)tmp->buffer[tmp->arrPos] <= 191) {
+            tmp->arrPos--;
+        } else {
+            break;
+        }
+    }
+    *line = tmp;
+    return 1;
+}
+
+int lineMoveRight(Line **line) {
+    Line *tmp = *line;
+
+    if (tmp->buffer[tmp->arrPos] == '\0') return 0;
+
+    tmp->arrPos++;
+
+    for (;;) {
+        if (tmp->buffer[tmp->arrPos] == '\0') break;
+
+        if ((unsigned char)tmp->buffer[tmp->arrPos] >= 128 && (unsigned char)tmp->buffer[tmp->arrPos] <= 191) {
+            tmp->arrPos++;
+        } else {
+            break;
+        }
+    }
+    *line = tmp;
+    return 1;
+}

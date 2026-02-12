@@ -13,6 +13,11 @@ typedef struct Line {
     struct Line *previous;
 }Line;
 
+/*------ Functions for insert mode ------*/
 
 int lineInsertChar(Line **line, unsigned char ch);
 int lineRemoveChar(Line **line);
+int lineMoveLeft(Line **line);
+int lineMoveRight(Line **line);
+
+/*---------------------------------------*/

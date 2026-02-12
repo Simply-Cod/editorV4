@@ -48,6 +48,6 @@ void tmpViewDraw(ViewPort *view, Buffer *buff) {
     write(STDOUT_FILENO, printPtr->buffer, strlen(printPtr->buffer));
 
     char cursor[32];
-    int n = snprintf(cursor, sizeof(cursor), "\x1b[%d;%dH", view->curY, view->curX);
+    int n = snprintf(cursor, sizeof(cursor), "\x1b[%d;%dH", view->curY, view->curX + 1);
     write(STDOUT_FILENO, cursor, n);
 }
