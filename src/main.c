@@ -56,6 +56,11 @@ int main() {
                         lineInsertChar(&buff.current, input);
                         view.curX++;
                         break;
+                    case BACKSPACE:
+                        if (lineRemoveChar(&buff.current)) {
+                            view.curX--;
+                        }
+                        break;
                 }
 
                 break;

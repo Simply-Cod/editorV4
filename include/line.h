@@ -15,3 +15,4 @@ typedef struct Line {
 
 
 int lineInsertChar(Line **line, unsigned char ch);
+int lineRemoveChar(Line **line);

@@ -47,3 +47,26 @@ int lineInsertChar(Line **line, unsigned char ch) {
     }
     return 1;
 }
+
+int lineRemoveChar(Line **line) {
+
+    Line *tmp = *line;
+
+    if (tmp->arrPos <= 0 || tmp->arrLength <= 0) return 0;
+
+    int rm = 1;
+    int n = tmp->arrPos - 1;
+
+    while ((unsigned char)tmp->buffer[n] >= 128 && (unsigned char)tmp->buffer[n] <= 191 && tmp->arrPos > 0) {
+        rm++;
+        n--;
+    }
+
+    memmove(&tmp->buffer[tmp->arrPos - rm], &tmp->buffer[tmp->arrPos], tmp->arrLength - tmp->arrPos + 1);
+    tmp->arrLength -= rm;
+    tmp->arrPos -= rm;
+
+    *line = tmp;
+
+    return 1;
+}
