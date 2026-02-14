@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "bufferInfo.h"
 #include "line.h"
 #include <stdlib.h>
 
@@ -7,7 +8,7 @@ void buffInit(Buffer *buff) {
     buff->current = NULL;
 }
 
-int buffCreateHead(Buffer *buff) {
+int buffCreateHead(Buffer *buff, BufferInfo *info) {
 
     if (buff->head != NULL) return 0;
 
@@ -28,6 +29,9 @@ int buffCreateHead(Buffer *buff) {
     buff->head->next = NULL;
     buff->head->previous = NULL;
 
+    info->lineCount = 1;
+    info->currentLineNumber = 1;
+
     return 1;
 }
 
@@ -47,4 +51,38 @@ void buffFreeAll(Buffer *buff) {
 
         current = next;
     }
+}
+
+int buffAddLineBelowCurrent(Buffer *buff, BufferInfo *info) {
+
+    Line *new = malloc(sizeof(Line));
+    if (!new) return 0;
+
+    new->buffer = malloc(sizeof(char) * LINE_CAP_32);
+    if (!new->buffer) {
+        free(new);
+        return 0;
+    }
+    new->arrPos = 0;
+    new->arrLength = 0;
+    new->capacity = LINE_CAP_32;
+    new->buffer[0] = '\0';
+    new->previous = buff->current;
+
+    if (buff->current == NULL)
+        new->next = NULL;
+    else
+        new->next = buff->current->next;
+
+    if (buff->current->next != NULL)
+        buff->current->next->previous = new;
+
+    buff->current->next = new;
+
+    info->lineCount++;
+    info->currentLineNumber++;
+
+    buff->current = buff->current->next;
+
+    return 1;
 }

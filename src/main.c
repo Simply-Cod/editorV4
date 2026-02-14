@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 Terminal term;
 
@@ -29,7 +30,7 @@ int main() {
 
     // Set up buffer either with provided arg or a new one
 
-    buffCreateHead(&buff);
+    buffCreateHead(&buff, &info);
     buff.current = buff.head;
 
     while (!quit) {
@@ -39,11 +40,6 @@ int main() {
 
 
             case NORMAL: /*--------- NORMAL MODE ---------*/
-                info.mode = INSERT;
-                break;
-
-
-            case INSERT: /*--------- INSERT MODE ---------*/
 
                 switch (input) {
                     case 0:
@@ -51,8 +47,67 @@ int main() {
                     case CTRL_Q:
                         quit = true;
                         break;
-                    case 32 ... 126: // asci 1 byte chars
-                    case 128 ... 247: // multi bytes
+                    case 'i':
+                        info.mode = INSERT;
+                        break;
+                    case 'a':
+                        info.mode = INSERT;
+                        if (lineMoveRight(&buff.current))
+                            view.curX++;
+                        break;
+                    case LEFT:
+                    case 'h':
+                        if (lineMoveLeft(&buff.current)) {
+                            view.curX--;
+                        }
+                        break;
+                    case RIGHT:
+                    case 'l':
+                        if (lineMoveRight(&buff.current)) {
+                            view.curX++;
+                        }
+                        break;
+                    case UP:
+                    case 'k':
+                        if (buff.current->previous != NULL) {
+                            buff.current = buff.current->previous;
+                            info.currentLineNumber--;
+                        }
+                        break;
+                    case DOWN:
+                    case 'j':
+                        if (buff.current->next != NULL) {
+                            buff.current = buff.current->next;
+                            info.currentLineNumber++;
+                        }
+                        break;
+                }
+
+                char c = buff.current->buffer[buff.current->arrPos];
+
+                if (buff.current->arrLength > 0 && c == '\0' && info.mode == NORMAL) {
+                    if (lineMoveLeft(&buff.current))
+                        view.curX--;
+                }
+
+                if (view.render == RENDER_WELCOME && info.mode == INSERT)
+                    view.render = RENDER_FULL;
+
+                break;   /*--------- NORMAL END ----------*/
+
+            case INSERT: /*--------- INSERT MODE ---------*/
+
+                switch (input) {
+                    case 0:
+                        break;
+                    case ESC:
+                        info.mode = NORMAL;
+                        break;
+                    case CTRL_Q:
+                        quit = true;
+                        break;
+                    case 32 ... 126: // ascii 1 byte range
+                    case 128 ... 247: // multi bytes range
                         lineInsertChar(&buff.current, input);
                         view.curX++;
                         break;
@@ -70,20 +125,40 @@ int main() {
                         if (lineMoveRight(&buff.current)) {
                             view.curX++;
                         }
+                        break;
+                    case UP:
+                        if (buff.current->previous != NULL) {
+                            buff.current = buff.current->previous;
+                            info.currentLineNumber--;
+                        }
+                        break;
+                    case DOWN:
+                        if (buff.current->next != NULL) {
+                            buff.current = buff.current->next;
+                            info.currentLineNumber++;
+                        }
+                        break;
+                    case ENTER:
+                        buffAddLineBelowCurrent(&buff, &info);
+                        break;
                 }
 
                 break;
-        } /*------------ INPUT END ------------*/
+        } /*------------ MODE END ------------*/
+
 
         viewGetTerminalSize(&view);
-        viewUpdate(&view);
+        viewCorrectCursor(&view, &buff);
+        viewUpdate(&view, &info);
 
-        tmpViewDraw(&view, &buff);
+        viewDraw(&view, &buff, &info);
+        viewSetCursorStyle(&info);
         fflush(stdout);
 
     }
 
-
+    write(STDOUT_FILENO, "\x1b[2 q", 5); // Block
+    write(STDOUT_FILENO, "\x1b[H\x1b[2K", 7); // clear
     buffFreeAll(&buff);
     terminalDisableRaw(&term);
     return 0;

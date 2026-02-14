@@ -14,6 +14,7 @@ int lineInsertChar(Line **line, unsigned char ch) {
         if (!new) return 0;
         tmp->buffer = new;
         tmp->capacity += LINE_CAP_32;
+        tmp->buffer[tmp->arrLength + 1] = '\0';
     }
 
     switch (ch) {
@@ -23,8 +24,7 @@ int lineInsertChar(Line **line, unsigned char ch) {
             tmp->buffer[tmp->arrPos] = ch;
             tmp->arrPos++;
             tmp->arrLength++;
-            *line = tmp;
-            return 1;
+            break;
 
         case 192 ... 223: // 2 byte's
             unsigned char ch2;
@@ -38,13 +38,14 @@ int lineInsertChar(Line **line, unsigned char ch) {
 
             tmp->arrLength += 2;
             tmp->arrPos += 2;
-            *line = tmp;
-            return 1;
+            break;
         case 224 ... 239: // 3 byte's
             break;
         case 240 ... 247: // 4 byte's
             break;
     }
+    tmp->buffer[tmp->arrLength] = '\0';
+    *line = tmp;
     return 1;
 }
 
@@ -66,6 +67,7 @@ int lineRemoveChar(Line **line) {
     tmp->arrLength -= rm;
     tmp->arrPos -= rm;
 
+    tmp->buffer[tmp->arrLength] = '\0';
     *line = tmp;
 
     return 1;

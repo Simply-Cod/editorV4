@@ -1,5 +1,6 @@
 #include "viewPort.h"
 #include "buffer.h"
+#include "bufferInfo.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -28,15 +29,106 @@ int viewGetTerminalSize(ViewPort *view) {
     return 1;
 }
 
-void viewUpdate(ViewPort *view) {
+void viewUpdate(ViewPort *view, BufferInfo *info) {
 
-    view->height -= 2;
+
+    if (info->currentLineNumber <= view->topLine)
+        view->topLine = info->currentLineNumber - 1;
+    else if (info->currentLineNumber >= view->topLine + view->height)
+        view->topLine = info->currentLineNumber - view->height;
+
+    view->curY = info->currentLineNumber - view->topLine;
+
+    if (view->oldTopLine != view->topLine) {
+        view->render = RENDER_FULL;
+        view->oldTopLine = view->topLine;
+    }
 }
 
 // TODO
-int viewDraw(ViewPort *view, Buffer *buff) {
+int viewDraw(ViewPort *view, Buffer *buff, BufferInfo *info) {
+
+    switch (view->render) {
+        case RENDER_WELCOME:
+            viewDrawWelcome(view);
+            break;
+        case RENDER_FULL:
+            viewDrawFull(view, buff, info);
+            break;
+        case RENDER_FROM_CURSOR:
+            break;
+        case RENDER_LINE:
+            break;
+    }
+
+    // Place cursor
+    const int offset = 6;
+    char cursor[32];
+    int n = snprintf(cursor, sizeof(cursor), "\x1b[%d;%dH", view->curY, view->curX + offset);
+    write(STDOUT_FILENO, cursor, n);
+
+    fflush(stdout);
 
     return 1;
+}
+
+// Welcome screen
+void viewDrawWelcome(ViewPort *view) {
+    write(STDOUT_FILENO, "\x1b[H\x1b[2J", 7);
+    for (int i = 0; i < view->height; i++) {
+        if (i == view->height / 2)
+            write(STDOUT_FILENO, "~\t\t\t\tWelcome\n", 13);
+        else
+            write(STDOUT_FILENO, "~\n", 2);
+    }
+}
+
+
+void viewDrawFull(ViewPort *view, Buffer *buff, BufferInfo *info) {
+
+    int index = 0;
+    Line *printPtr = buff->head;
+
+    if (view->topLine >= 1) {
+
+        while (printPtr != NULL && index < view->topLine) {
+            printPtr = printPtr->next;
+            index++;
+        }
+
+    }
+
+    write(STDOUT_FILENO, "\x1b[H\x1b[2J", 7); // Move to beginning and clear
+
+    char lineNumb[32];
+    int n = 0;
+    for (int i = 0; i < view->height - 2; i++) {
+
+        if (printPtr == buff->current)
+            n = snprintf(lineNumb, sizeof(lineNumb), "\x1b[1m%4d\x1b[0m ", (index + i) + 1);
+        else
+            n = snprintf(lineNumb, sizeof(lineNumb), "\x1b[38;5;102m%4d\x1b[0m ", (index + i) + 1);
+
+        if (printPtr != NULL) {
+            write(STDOUT_FILENO, lineNumb, n);
+            viewPrintLine(printPtr);
+            write(STDOUT_FILENO, "\n", 1);
+            printPtr = printPtr->next;
+        } else {
+            write(STDOUT_FILENO, "~\n", 2);
+        }
+    }
+
+}
+
+void viewPrintLine(Line *line) {
+
+    if (line->arrLength <= 0) return;
+
+    for (int i = 0; i < line->arrLength; i++) {
+        write(STDOUT_FILENO, &line->buffer[i], 1);
+    }
+
 }
 
 void tmpViewDraw(ViewPort *view, Buffer *buff) {
@@ -44,10 +136,44 @@ void tmpViewDraw(ViewPort *view, Buffer *buff) {
     Line *printPtr = buff->current;
 
     write(STDOUT_FILENO, "\x1b[H\x1b[2J", 7); // Move cursor to beginning
-    
+
     write(STDOUT_FILENO, printPtr->buffer, strlen(printPtr->buffer));
+
+    char test[64];
+    int t = snprintf(test, sizeof(test), "\n\ncurrent char: %c", buff->current->buffer[buff->current->arrPos]);
+    write(STDOUT_FILENO, test, t);
 
     char cursor[32];
     int n = snprintf(cursor, sizeof(cursor), "\x1b[%d;%dH", view->curY, view->curX + 1);
     write(STDOUT_FILENO, cursor, n);
+}
+
+void viewSetCursorStyle(BufferInfo *info) {
+
+    if (info->mode == NORMAL) {
+        write(STDOUT_FILENO, "\x1b[2 q", 5); // Block
+    } else {
+        write(STDOUT_FILENO, "\x1b[6 q", 5); // I
+    }
+
+}
+
+void viewCorrectCursor(ViewPort *view, Buffer *buff) {
+
+    if (buff->current->arrLength <= 0) {
+        view->curX = 0;
+        return;
+    }
+
+    int visualChars = buff->current->arrPos;
+
+    for (int i = 0; i < buff->current->arrPos; i++) {
+        unsigned char n = buff->current->buffer[i];
+
+        if (n >= 128 && n <= 191)
+            visualChars--;
+    }
+
+    view->curX = visualChars;
+
 }
