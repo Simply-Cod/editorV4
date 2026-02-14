@@ -34,8 +34,9 @@ void viewUpdate(ViewPort *view, BufferInfo *info) {
 
     if (info->currentLineNumber <= view->topLine)
         view->topLine = info->currentLineNumber - 1;
-    else if (info->currentLineNumber >= view->topLine + view->height)
-        view->topLine = info->currentLineNumber - view->height;
+    else if (info->currentLineNumber >= view->topLine + (view->height - 2)) // - 2 to have space for the status line
+        view->topLine = info->currentLineNumber - (view->height - 2);
+
 
     view->curY = info->currentLineNumber - view->topLine;
 
@@ -51,7 +52,7 @@ int viewDraw(ViewPort *view, Buffer *buff, BufferInfo *info) {
     switch (view->render) {
         case RENDER_WELCOME:
             viewDrawWelcome(view);
-            break;
+            return 1;
         case RENDER_FULL:
             viewDrawFull(view, buff, info);
             break;
@@ -81,6 +82,13 @@ void viewDrawWelcome(ViewPort *view) {
         else
             write(STDOUT_FILENO, "~\n", 2);
     }
+    // Place cursor
+    const int offset = 3;
+    char cursor[32];
+    int n = snprintf(cursor, sizeof(cursor), "\x1b[%d;%dH", view->curY, view->curX + offset);
+    write(STDOUT_FILENO, cursor, n);
+
+    fflush(stdout);
 }
 
 

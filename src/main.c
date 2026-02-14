@@ -112,8 +112,15 @@ int main() {
                         view.curX++;
                         break;
                     case BACKSPACE:
-                        if (lineRemoveChar(&buff.current)) {
-                            view.curX--;
+                        if (buff.current->arrPos == 0) {
+                            if (buff.current->previous == NULL) break;
+                            // ToDo add moveBufferUp
+
+                        } else {
+
+                            if (lineRemoveChar(&buff.current)) {
+                                view.curX--;
+                            }
                         }
                         break;
                     case LEFT:
@@ -140,6 +147,14 @@ int main() {
                         break;
                     case ENTER:
                         buffAddLineBelowCurrent(&buff, &info);
+                        // ToDo: add RENDER_FROM_CURSOR
+                        Line *l = buff.current->previous;
+
+                        if (l->arrPos < l->arrLength) {
+                            int count = l->arrLength - l->arrPos;
+
+                            lineMoveBuff(&buff.current->previous, &buff.current, count);
+                        }
                         break;
                 }
 

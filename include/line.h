@@ -19,5 +19,6 @@ int lineInsertChar(Line **line, unsigned char ch);
 int lineRemoveChar(Line **line);
 int lineMoveLeft(Line **line);
 int lineMoveRight(Line **line);
+int lineMoveBuff(Line **src, Line **dest, int count);
 
 /*---------------------------------------*/

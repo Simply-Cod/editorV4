@@ -81,6 +81,7 @@ int buffAddLineBelowCurrent(Buffer *buff, BufferInfo *info) {
 
     info->lineCount++;
     info->currentLineNumber++;
+    info->dirty = true;
 
     buff->current = buff->current->next;
 

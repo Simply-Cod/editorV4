@@ -14,7 +14,7 @@ int lineInsertChar(Line **line, unsigned char ch) {
         if (!new) return 0;
         tmp->buffer = new;
         tmp->capacity += LINE_CAP_32;
-        tmp->buffer[tmp->arrLength + 1] = '\0';
+        tmp->buffer[tmp->arrLength] = '\0';
     }
 
     switch (ch) {
@@ -68,6 +68,16 @@ int lineRemoveChar(Line **line) {
     tmp->arrPos -= rm;
 
     tmp->buffer[tmp->arrLength] = '\0';
+
+    if (tmp->capacity > tmp->arrLength + (LINE_CAP_32 * 2)) {
+        char *new = realloc(tmp->buffer, tmp->capacity - LINE_CAP_32);
+
+        if (!new) return 0;
+        tmp->buffer = new;
+        tmp->capacity -= LINE_CAP_32;
+        tmp->buffer[tmp->arrLength] = '\0';
+    }
+
     *line = tmp;
 
     return 1;
@@ -110,5 +120,36 @@ int lineMoveRight(Line **line) {
         }
     }
     *line = tmp;
+    return 1;
+}
+
+int lineMoveBuff(Line **src, Line **dest, int count) {
+    Line *current = *src;
+    Line *next = *dest;
+
+    if (next == NULL) return 0;
+
+    if (next->arrLength + count > next->capacity - 2) {
+        int cap = next->capacity;
+
+        while (cap < (next->capacity + count) + 5) {
+            cap += LINE_CAP_32;
+        }
+
+        char *tmp = realloc(next->buffer, cap);
+        if (!tmp) return 0;
+
+        next->buffer = tmp;
+        next->buffer[next->arrLength] = '\0';
+        next->capacity = cap;
+    }
+
+    strncpy(&next->buffer[next->arrLength], &current->buffer[current->arrPos], count);
+
+    current->arrLength -= count;
+    current->buffer[current->arrLength] = '\0';
+
+    next->arrLength += count;
+    next->buffer[next->arrLength] = '\0';
     return 1;
 }
