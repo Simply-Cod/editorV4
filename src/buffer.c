@@ -87,3 +87,60 @@ int buffAddLineBelowCurrent(Buffer *buff, BufferInfo *info) {
 
     return 1;
 }
+
+int bufferAddLineAboveCurrent(Buffer *buff, BufferInfo *info) {
+
+    Line *new = malloc(sizeof(Line));
+    if (!new) return 0;
+
+    new->buffer = malloc(sizeof(char) * LINE_CAP_32);
+    if (!new->buffer) {
+        free(new);
+        return 0;
+    }
+    new->arrPos = 0;
+    new->arrLength = 0;
+    new->capacity = LINE_CAP_32;
+    new->buffer[0] = '\0';
+
+    new->next = buff->current;
+    new->previous = buff->current->previous;
+
+    if (buff->current->previous != NULL) {
+        buff->current->previous->next = new;
+    } else {
+        buff->head = new;
+    }
+    buff->current->previous = new;
+
+    info->lineCount++;
+    info->dirty = true;
+
+    buff->current = buff->current->previous;
+    return 1;
+}
+
+void bufferDeleteLine(Buffer *buff, BufferInfo *info, Line **toDelete) {
+
+    Line *l = *toDelete;
+
+    if (buff->head->next == NULL) return;
+
+    if (l->previous == NULL) {
+        buff->head = l->next;
+    } else {
+        l->previous->next = l->next;
+    }
+
+    if (l->next != NULL) {
+        l->next->previous = l->previous;
+    }
+
+    if (l->buffer != NULL)
+        free(l->buffer);
+
+    free(l);
+
+    info->lineCount--;
+    info->dirty = true;
+}

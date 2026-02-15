@@ -81,6 +81,14 @@ int main() {
                             info.currentLineNumber++;
                         }
                         break;
+                    case 'o':
+                        buffAddLineBelowCurrent(&buff, &info);
+                        info.mode = INSERT;
+                        break;
+                    case 'O':
+                        bufferAddLineAboveCurrent(&buff, &info);
+                        info.mode = INSERT;
+                        break;
                 }
 
                 char c = buff.current->buffer[buff.current->arrPos];
@@ -112,9 +120,23 @@ int main() {
                         view.curX++;
                         break;
                     case BACKSPACE:
-                        if (buff.current->arrPos == 0) {
+                        if (buff.current->arrPos <= 0) {
                             if (buff.current->previous == NULL) break;
-                            // ToDo add moveBufferUp
+
+                            if (buff.current->arrLength > 0) {
+                                int newCurPos = buff.current->previous->arrLength;
+                                lineMoveBuff(&buff.current, &buff.current->previous, buff.current->arrLength);
+                                buff.current = buff.current->previous;
+                                bufferDeleteLine(&buff, &info, &buff.current->next);
+                                buff.current->arrPos = newCurPos;
+                                info.currentLineNumber--;
+                            } else {
+                                int newCurPos = buff.current->previous->arrLength;
+                                buff.current = buff.current->previous;
+                                bufferDeleteLine(&buff, &info, &buff.current->next);
+                                buff.current->arrPos = newCurPos;
+                                info.currentLineNumber--;
+                            }
 
                         } else {
 
