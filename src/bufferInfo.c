@@ -1,6 +1,9 @@
 #include "bufferInfo.h"
 
 #include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 void infoInit(BufferInfo *info) {
     info->currentLineNumber = 0;
@@ -8,5 +11,47 @@ void infoInit(BufferInfo *info) {
     info->mode = NORMAL;
     info->dirty = false;
     info->hasFileName = false;
+    info->loadFile = false;
     info->fileName = NULL;
+}
+
+int handleArgs(BufferInfo *info, int argc, char *argv[]) {
+
+    if (argc <= 1) {
+        return 1;
+    } else if (argc == 2) {
+
+        struct stat st;
+
+        if (stat(argv[1], &st) == 0) {
+
+            if (S_ISREG(st.st_mode)) { // is a file
+
+                info->fileName = strndup(argv[1], strlen(argv[1]));
+
+                if (!info->fileName) return 0;
+
+                info->hasFileName = true;
+                info->loadFile = true;
+                return 1;
+            } else if (S_ISDIR(st.st_mode)) { // is a directory
+
+                if (chdir(argv[1]) != 0)
+                    return 0;
+                else
+                    return 1;
+            } else { // Unknown
+
+                return 0;
+            }
+        } else { // set as file name
+
+            info->fileName = strndup(argv[1], strlen(argv[1]));
+            if (!info->fileName) return 0;
+
+            info->hasFileName = true;
+            return 1;
+        }
+    }
+    return 1;
 }

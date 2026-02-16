@@ -13,8 +13,10 @@ typedef struct BufferInfo {
     enum EditorMode mode;
     bool dirty;
     bool hasFileName;
+    bool loadFile;
     char *fileName;
 }BufferInfo;
 
 
 void infoInit(BufferInfo *info);
+int handleArgs(BufferInfo *info, int argc, char *argv[]);

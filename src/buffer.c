@@ -1,7 +1,9 @@
 #include "buffer.h"
 #include "bufferInfo.h"
 #include "line.h"
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void buffInit(Buffer *buff) {
     buff->head = NULL;
@@ -143,4 +145,65 @@ void bufferDeleteLine(Buffer *buff, BufferInfo *info, Line **toDelete) {
 
     info->lineCount--;
     info->dirty = true;
+}
+
+int buffLoadFromFile(Buffer *buff, BufferInfo *info) {
+
+    FILE *file;
+    file = fopen(info->fileName, "r");
+
+    if (file == NULL) return 0;
+
+    buff->current = buff->head;
+    info->lineCount = 1;
+    char buf[1024];
+
+
+    while (fgets(buf, sizeof(buf), file)) {
+        size_t len = strlen(buf);
+
+        if (len == 0) continue;
+
+        if (buf[len - 1] == '\n') {
+            buf[len - 1] = '\0';
+            len--;
+        }
+
+        buff->current->buffer = malloc(len + 1);
+
+        if (!buff->current->buffer) {
+            fclose(file);
+            buffFreeAll(buff);
+            info->lineCount = 0;
+            return 0;
+        }
+
+        strcpy(buff->current->buffer, buf);
+
+        buff->current->capacity = len + 1;
+        buff->current->arrLength = len;
+        buff->current->arrPos = 0;
+
+        info->lineCount++;
+
+        if (!feof(file)) {
+
+            buffAddLineBelowCurrent(buff, info);
+
+            if (buff->current->next) {
+                buff->current = buff->current->next;
+            }
+        }
+    }
+    fclose(file);
+
+    if (buff->current && buff->current->arrLength == 0) {
+        buff->current = buff->current->previous;
+
+        bufferDeleteLine(buff, info, &buff->current->next);
+        buff->current->next = NULL;
+    }
+
+
+    return 1;
 }

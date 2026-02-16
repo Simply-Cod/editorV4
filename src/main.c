@@ -12,13 +12,14 @@
 
 Terminal term;
 
-int main() {
+int main(int argc, char *argv[1]) {
 
     Buffer buff;
     buffInit(&buff);
 
     BufferInfo info;
     infoInit(&info);
+    handleArgs(&info, argc, argv);
 
     ViewPort view;
     viewInit(&view);
@@ -28,10 +29,18 @@ int main() {
     unsigned int input;
     bool quit = false;
 
-    // Set up buffer either with provided arg or a new one
 
+    // Set up buffer either with provided arg or a new one
     buffCreateHead(&buff, &info);
-    buff.current = buff.head;
+    if (info.hasFileName && info.loadFile) {
+        buffLoadFromFile(&buff, &info);
+        buff.current = buff.head;
+        view.render = RENDER_FULL;
+        info.currentLineNumber = 1;
+
+    } else {
+        buff.current = buff.head;
+    }
 
     while (!quit) {
         input = readInput();
@@ -196,6 +205,11 @@ int main() {
 
     write(STDOUT_FILENO, "\x1b[2 q", 5); // Block
     write(STDOUT_FILENO, "\x1b[H\x1b[2K", 7); // clear
+
+    if (info.fileName != NULL) {
+        free(info.fileName);
+    }
+
     buffFreeAll(&buff);
     terminalDisableRaw(&term);
     return 0;

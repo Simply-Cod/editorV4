@@ -16,3 +16,6 @@ void bufferDeleteLine(Buffer *buff, BufferInfo *info, Line **toDelete);
 
 int buffAddLineBelowCurrent(Buffer *buff, BufferInfo *info);
 int bufferAddLineAboveCurrent(Buffer *buff, BufferInfo *info);
+
+
+int buffLoadFromFile(Buffer *buff, BufferInfo *info);

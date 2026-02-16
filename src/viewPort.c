@@ -76,14 +76,30 @@ int viewDraw(ViewPort *view, Buffer *buff, BufferInfo *info) {
 // Welcome screen
 void viewDrawWelcome(ViewPort *view) {
     write(STDOUT_FILENO, "\x1b[H\x1b[2J", 7);
+
+    int msgY = view->height / 2;
+    int msgX = view->width / 2;
+    char msg[32];
     for (int i = 0; i < view->height; i++) {
-        if (i == view->height / 2)
-            write(STDOUT_FILENO, "~\t\t\t\tWelcome\n", 13);
-        else
+        if (i == msgY) {
+
+            int n = snprintf(msg, sizeof(msg), "\x1b[%dG", msgX);
+            write(STDOUT_FILENO, "~", 1);
+            write(STDOUT_FILENO, msg, n);
+            write(STDOUT_FILENO, "Welcome\n", 9);
+        } else if (i == msgY + 2) {
+            int n = snprintf(msg, sizeof(msg), "\x1b[%dG", msgX - 5);
+            write(STDOUT_FILENO, "~", 1);
+            write(STDOUT_FILENO, msg, n);
+            write(STDOUT_FILENO, "type Ctrl-Q to quit\n", 21);
+
+        } else {
             write(STDOUT_FILENO, "~\n", 2);
+        }
+
     }
     // Place cursor
-    const int offset = 3;
+    const int offset = 6;
     char cursor[32];
     int n = snprintf(cursor, sizeof(cursor), "\x1b[%d;%dH", view->curY, view->curX + offset);
     write(STDOUT_FILENO, cursor, n);
@@ -107,6 +123,7 @@ void viewDrawFull(ViewPort *view, Buffer *buff, BufferInfo *info) {
     }
 
     write(STDOUT_FILENO, "\x1b[H\x1b[2J", 7); // Move to beginning and clear
+    write(STDOUT_FILENO, "\x1b[?25l", 6); // hide cursor
 
     char lineNumb[32];
     int n = 0;
@@ -126,7 +143,7 @@ void viewDrawFull(ViewPort *view, Buffer *buff, BufferInfo *info) {
             write(STDOUT_FILENO, "~\n", 2);
         }
     }
-
+    write(STDOUT_FILENO, "\x1b[?25h", 6); // show cursor
 }
 
 void viewPrintLine(Line *line) {
