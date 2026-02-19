@@ -4,6 +4,7 @@
 #include "line.h"
 #include "terminal.h"
 #include "viewPort.h"
+#include "motions.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -85,6 +86,9 @@ int main(int argc, char *argv[1]) {
                             buff.current->arrPos = viewMoveCurOnY(buff.current->next, buff.current);
                         }
                         break;
+                    case CTRL_U:
+                        motion_scrollHalfPageUp(&view, &buff, &info);
+                        break;
                     case DOWN:
                     case 'j':
                         if (buff.current->next != NULL) {
@@ -93,6 +97,9 @@ int main(int argc, char *argv[1]) {
 
                             buff.current->arrPos = viewMoveCurOnY(buff.current->previous, buff.current);
                         }
+                        break;
+                    case CTRL_D:
+                        motion_scrollHalfPageDown(&view, &buff, &info);
                         break;
                     case 'o':
                         buffAddLineBelowCurrent(&buff, &info);
