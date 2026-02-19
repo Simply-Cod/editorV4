@@ -14,6 +14,8 @@ void viewInit(ViewPort *view) {
     view->width = 0;
     view->topLine = 0;
     view->oldTopLine = 0;
+    view->currentLineNumb = 0;
+    view->oldLineNumb = 0;
     view->render = RENDER_WELCOME;
 }
 
@@ -44,6 +46,8 @@ void viewUpdate(ViewPort *view, BufferInfo *info) {
         view->render = RENDER_FULL;
         view->oldTopLine = view->topLine;
     }
+
+    view->currentLineNumb = info->currentLineNumber;
 }
 
 // TODO
@@ -59,18 +63,19 @@ int viewDraw(ViewPort *view, Buffer *buff, BufferInfo *info) {
         case RENDER_FROM_CURSOR:
             break;
         case RENDER_LINE:
+            viewDrawLine(view, buff, info);
             break;
     }
 
-    // Place cursor
+    return 1;
+}
+
+void viewPlaceCursorOnCurrent(ViewPort *view) {
+
     const int offset = 6;
     char cursor[32];
     int n = snprintf(cursor, sizeof(cursor), "\x1b[%d;%dH", view->curY, view->curX + offset);
     write(STDOUT_FILENO, cursor, n);
-
-    fflush(stdout);
-
-    return 1;
 }
 
 // Welcome screen
@@ -121,9 +126,7 @@ void viewDrawFull(ViewPort *view, Buffer *buff, BufferInfo *info) {
         }
 
     }
-
     write(STDOUT_FILENO, "\x1b[H\x1b[2J", 7); // Move to beginning and clear
-    write(STDOUT_FILENO, "\x1b[?25l", 6); // hide cursor
 
     char lineNumb[32];
     int n = 0;
@@ -143,7 +146,43 @@ void viewDrawFull(ViewPort *view, Buffer *buff, BufferInfo *info) {
             write(STDOUT_FILENO, "~\n", 2);
         }
     }
-    write(STDOUT_FILENO, "\x1b[?25h", 6); // show cursor
+}
+
+void viewDrawLine(ViewPort *view, Buffer *buff, BufferInfo *info) {
+
+    if (view->oldLineNumb != view->currentLineNumb) {
+        write(STDOUT_FILENO, "\x1b[0G", 4);
+        write(STDOUT_FILENO, "    ", 4);
+        write(STDOUT_FILENO, "\x1b[0G", 4);
+
+        char lineNumb[32];
+        int n = snprintf(lineNumb, sizeof(lineNumb), "\x1b[38;5;102m%4d\x1b[0m", (view->oldLineNumb));
+        write(STDOUT_FILENO, lineNumb, n);
+    }
+
+    char move[32];
+    int nMove = snprintf(move, sizeof(move), "\x1b[%d;0H\x1b[0K", view->curY);
+    write(STDOUT_FILENO, move, nMove);
+
+
+    char lineNumb[32];
+    int n = snprintf(lineNumb, sizeof(lineNumb), "\x1b[1m%4d\x1b[0m ", (view->currentLineNumb));
+    write(STDOUT_FILENO, lineNumb, n);
+
+    viewPrintLine(buff->current);
+}
+
+void viewDrawStatusLine(ViewPort *view, Buffer *buff, BufferInfo *info) {
+
+    char pos[32];
+    int nPos = snprintf(pos, sizeof(pos), "\x1b[%d;0H\x1b[2K", view->height - 1);
+    write(STDOUT_FILENO, pos, nPos);
+
+    char mode[64];
+    int nMode = snprintf(mode, sizeof(mode), "-- %s MODE\x1b[0m --",
+            (info->mode == INSERT) ? "\x1b[41mINSERT" : "\x1b[44mNORMAL");
+    write(STDOUT_FILENO, mode, nMode);
+
 }
 
 void viewPrintLine(Line *line) {
@@ -201,4 +240,13 @@ void viewCorrectCursor(ViewPort *view, Buffer *buff) {
 
     view->curX = visualChars;
 
+}
+
+int viewMoveCurOnY(Line *oldLine, Line *newLine) {
+
+    if (oldLine->arrPos > newLine->arrLength) {
+        return newLine->arrLength;
+    } else {
+        return oldLine->arrPos;
+    }
 }

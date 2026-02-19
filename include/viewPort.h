@@ -17,6 +17,8 @@ typedef struct ViewPort {
     int oldTopLine;
     int curX;
     int curY;
+    int oldLineNumb;
+    int currentLineNumb;
     enum RenderType render;
 }ViewPort;
 
@@ -34,6 +36,11 @@ void viewCorrectCursor(ViewPort *view, Buffer *buff);
 int viewDraw(ViewPort *view, Buffer *buff, BufferInfo *info);
 void viewDrawWelcome(ViewPort *view);
 void viewDrawFull(ViewPort *view, Buffer *buff, BufferInfo *info);
+void viewDrawLine(ViewPort *view, Buffer *buff, BufferInfo *info);
 
+void viewDrawStatusLine(ViewPort *view, Buffer *buff, BufferInfo *info);
+
+void viewPlaceCursorOnCurrent(ViewPort *view);
 
 void viewPrintLine(Line *line);
+int viewMoveCurOnY(Line *oldLine, Line *newLine);

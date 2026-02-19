@@ -81,6 +81,8 @@ int main(int argc, char *argv[1]) {
                         if (buff.current->previous != NULL) {
                             buff.current = buff.current->previous;
                             info.currentLineNumber--;
+
+                            buff.current->arrPos = viewMoveCurOnY(buff.current->next, buff.current);
                         }
                         break;
                     case DOWN:
@@ -88,15 +90,19 @@ int main(int argc, char *argv[1]) {
                         if (buff.current->next != NULL) {
                             buff.current = buff.current->next;
                             info.currentLineNumber++;
+
+                            buff.current->arrPos = viewMoveCurOnY(buff.current->previous, buff.current);
                         }
                         break;
                     case 'o':
                         buffAddLineBelowCurrent(&buff, &info);
                         info.mode = INSERT;
+                        view.render = RENDER_FULL;
                         break;
                     case 'O':
                         bufferAddLineAboveCurrent(&buff, &info);
                         info.mode = INSERT;
+                        view.render = RENDER_FULL;
                         break;
                 }
 
@@ -186,6 +192,7 @@ int main(int argc, char *argv[1]) {
 
                             lineMoveBuff(&buff.current->previous, &buff.current, count);
                         }
+                        view.render = RENDER_FULL;
                         break;
                 }
 
@@ -197,10 +204,18 @@ int main(int argc, char *argv[1]) {
         viewCorrectCursor(&view, &buff);
         viewUpdate(&view, &info);
 
+        write(STDOUT_FILENO, "\x1b[?25l", 6); // Hide cursor
         viewDraw(&view, &buff, &info);
+        viewDrawStatusLine(&view, &buff, &info);
+
+        viewPlaceCursorOnCurrent(&view);
         viewSetCursorStyle(&info);
+        write(STDOUT_FILENO, "\x1b[?25h", 6); // Show cursor
         fflush(stdout);
 
+        view.oldLineNumb = view.currentLineNumb;
+        if (view.render != RENDER_WELCOME)
+            view.render = RENDER_LINE;
     }
 
     write(STDOUT_FILENO, "\x1b[2 q", 5); // Block
