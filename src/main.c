@@ -62,19 +62,23 @@ int main(int argc, char *argv[1]) {
                         break;
                     case 'a':
                         info.mode = INSERT;
-                        if (lineMoveRight(&buff.current))
+                        if (lineMoveRight(&buff.current)) {
                             view.curX++;
+                            buff.prefArrPos = buff.current->arrPos;
+                        }
                         break;
                     case LEFT:
                     case 'h':
                         if (lineMoveLeft(&buff.current)) {
                             view.curX--;
+                            buff.prefArrPos = buff.current->arrPos;
                         }
                         break;
                     case RIGHT:
                     case 'l':
                         if (lineMoveRight(&buff.current)) {
                             view.curX++;
+                            buff.prefArrPos = buff.current->arrPos;
                         }
                         break;
                     case UP:
@@ -82,8 +86,7 @@ int main(int argc, char *argv[1]) {
                         if (buff.current->previous != NULL) {
                             buff.current = buff.current->previous;
                             info.currentLineNumber--;
-
-                            buff.current->arrPos = viewMoveCurOnY(buff.current->next, buff.current);
+                            bufferSetPrefArrPos(&buff);
                         }
                         break;
                     case CTRL_U:
@@ -95,7 +98,7 @@ int main(int argc, char *argv[1]) {
                             buff.current = buff.current->next;
                             info.currentLineNumber++;
 
-                            buff.current->arrPos = viewMoveCurOnY(buff.current->previous, buff.current);
+                            bufferSetPrefArrPos(&buff);
                         }
                         break;
                     case CTRL_D:
@@ -140,6 +143,7 @@ int main(int argc, char *argv[1]) {
                     case 128 ... 247: // multi bytes range
                         lineInsertChar(&buff.current, input);
                         view.curX++;
+                        buff.prefArrPos = buff.current->arrPos;
                         break;
                     case BACKSPACE:
                         if (buff.current->arrPos <= 0) {
@@ -164,29 +168,34 @@ int main(int argc, char *argv[1]) {
 
                             if (lineRemoveChar(&buff.current)) {
                                 view.curX--;
+                                buff.prefArrPos = buff.current->arrPos;
                             }
                         }
                         break;
                     case LEFT:
                         if (lineMoveLeft(&buff.current)) {
                             view.curX--;
+                            buff.prefArrPos = buff.current->arrPos;
                         }
                         break;
                     case RIGHT:
                         if (lineMoveRight(&buff.current)) {
                             view.curX++;
+                            buff.prefArrPos = buff.current->arrPos;
                         }
                         break;
                     case UP:
                         if (buff.current->previous != NULL) {
                             buff.current = buff.current->previous;
                             info.currentLineNumber--;
+                            bufferSetPrefArrPos(&buff);
                         }
                         break;
                     case DOWN:
                         if (buff.current->next != NULL) {
                             buff.current = buff.current->next;
                             info.currentLineNumber++;
+                            bufferSetPrefArrPos(&buff);
                         }
                         break;
                     case ENTER:

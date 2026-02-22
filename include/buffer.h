@@ -4,6 +4,7 @@
 #include "line.h"
 
 typedef struct Buffer {
+    int prefArrPos;
     Line *head;
     Line *current;
 }Buffer;
@@ -19,3 +20,4 @@ int bufferAddLineAboveCurrent(Buffer *buff, BufferInfo *info);
 
 
 int buffLoadFromFile(Buffer *buff, BufferInfo *info);
+void bufferSetPrefArrPos(Buffer *buff);

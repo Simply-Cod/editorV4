@@ -8,6 +8,7 @@
 void buffInit(Buffer *buff) {
     buff->head = NULL;
     buff->current = NULL;
+    buff->prefArrPos = 0;
 }
 
 int buffCreateHead(Buffer *buff, BufferInfo *info) {
@@ -206,4 +207,14 @@ int buffLoadFromFile(Buffer *buff, BufferInfo *info) {
 
 
     return 1;
+}
+
+void bufferSetPrefArrPos(Buffer *buff) {
+
+    if (buff->prefArrPos > buff->current->arrLength) {
+        buff->current->arrPos = buff->current->arrLength;
+    } else {
+        buff->current->arrPos = buff->prefArrPos;
+    }
+
 }
