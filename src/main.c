@@ -150,13 +150,6 @@ int main(int argc, char *argv[1]) {
                         break;
                 }
 
-                char c = buff.current->buffer[buff.current->arrPos];
-
-                if (buff.current->arrLength > 0 && c == '\0' && info.mode == NORMAL) {
-                    if (lineMoveLeft(&buff.current))
-                        view.curX--;
-                }
-
                 if (view.render == RENDER_WELCOME && info.mode == INSERT)
                     view.render = RENDER_FULL;
 
@@ -198,6 +191,7 @@ int main(int argc, char *argv[1]) {
                                 buff.current->arrPos = newCurPos;
                                 info.currentLineNumber--;
                             }
+                            view.render = RENDER_FULL;
 
                         } else {
 
@@ -317,6 +311,13 @@ int main(int argc, char *argv[1]) {
                 break;
         } /*------------ MODE END ------------*/
 
+
+        char c = buff.current->buffer[buff.current->arrPos];
+
+        if (buff.current->arrLength > 0 && c == '\0' && info.mode == NORMAL) {
+            if (lineMoveLeft(&buff.current))
+                view.curX--;
+        }
 
         viewGetTerminalSize(&view);
         viewCorrectCursor(&view, &buff);
