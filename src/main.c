@@ -85,7 +85,9 @@ int main(int argc, char *argv[1]) {
                         quit = true;
                         break;
                     case '!':
-                        notifySet(&notif, NOTIFY_ERROR, "This is just a test");
+                        char debug_msg[32];
+                        snprintf(debug_msg, sizeof(debug_msg), "%s", info.fileName);
+                        notifySet(&notif, NOTIFY_ERROR, debug_msg);
                             break;
                     case 'i':
                         info.mode = INSERT;

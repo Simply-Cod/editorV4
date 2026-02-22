@@ -4,7 +4,6 @@
 #include "line.h"
 
 #include <stdio.h>
-#include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 
@@ -185,16 +184,15 @@ void viewDrawStatusLine(ViewPort *view, Buffer *buff, BufferInfo *info) {
     write(STDOUT_FILENO, mode, nMode);
 
     char name[128];
+    int n = 0;
     if (info->hasFileName) {
-        strncpy(name, info->fileName, strlen(info->fileName));
+        n = snprintf(name, sizeof(name), "%s", info->fileName);
     } else {
-        strcpy(name, "<no name>");
+        n = snprintf(name, sizeof(name), "%s", "<no name>");
     }
 
-    char fName[256];
-    int n = snprintf(fName, sizeof(fName), "%s ", name);
 
-    write(STDOUT_FILENO, fName, n);
+    write(STDOUT_FILENO, name, n);
 
     if (info->dirty) {
         write(STDOUT_FILENO, " [+]", 4);
