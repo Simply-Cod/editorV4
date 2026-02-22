@@ -18,6 +18,7 @@ int lineInsertChar(Line **line, unsigned char ch) {
     }
 
     switch (ch) {
+        case '\t':
         case 32 ... 126: // 1 byte
             memmove(&tmp->buffer[tmp->arrPos + 1], &tmp->buffer[tmp->arrPos], tmp->arrLength - tmp->arrPos);
 

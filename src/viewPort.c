@@ -243,6 +243,10 @@ void viewPrintLine(Line *line) {
     if (line->arrLength <= 0) return;
 
     for (int i = 0; i < line->arrLength; i++) {
+        if (line->buffer[i] == '\t') {
+            write(STDOUT_FILENO, "    ", 4);
+            continue;
+        }
         write(STDOUT_FILENO, &line->buffer[i], 1);
     }
 
@@ -287,8 +291,12 @@ void viewCorrectCursor(ViewPort *view, Buffer *buff) {
     for (int i = 0; i < buff->current->arrPos; i++) {
         unsigned char n = buff->current->buffer[i];
 
-        if (n >= 128 && n <= 191)
+        if (n >= 128 && n <= 191) {
             visualChars--;
+        } else if (n == '\t') {
+            visualChars += 3;
+        }
+
     }
 
     view->curX = visualChars;
