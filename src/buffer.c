@@ -209,6 +209,26 @@ int buffLoadFromFile(Buffer *buff, BufferInfo *info) {
     return 1;
 }
 
+int buffWriteFile(Buffer *buff, char *fileName) {
+
+    if (fileName == NULL) return 0;
+
+    FILE *file = fopen(fileName, "w");
+
+    if (file == NULL) return 0;
+
+    Line *line = buff->head;
+
+    while (line != NULL) {
+        fprintf(file, "%s\n", line->buffer);
+
+        line = line->next;
+    }
+    fclose(file);
+
+    return 1;
+}
+
 void bufferSetPrefArrPos(Buffer *buff) {
 
     if (buff->prefArrPos > buff->current->arrLength) {
