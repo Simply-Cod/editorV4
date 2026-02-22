@@ -24,7 +24,7 @@ int notifyError(ViewPort *view, char *err) {
     write(STDOUT_FILENO, buf, n);
 
     // │ Title line
-    n = snprintf(buf, sizeof(buf), "\x1b[%d;%dH║ \x1b[31mError!\x1b[0m                             ║", row + 1, startCol);
+    n = snprintf(buf, sizeof(buf), "\x1b[%d;%dH║ \x1b[31m%-34s\x1b[0m ║", row + 1, startCol, "Error!");
     write(STDOUT_FILENO, buf, n);
 
     // │ Message line (dynamic text)
@@ -51,7 +51,7 @@ static void notifySaved(ViewPort *view, char *msg) {
     write(STDOUT_FILENO, buf, n);
 
     // │ Title line
-    n = snprintf(buf, sizeof(buf), "\x1b[%d;%dH║ \x1b[32mSaved!\x1b[0m                             ║", row + 1, startCol);
+    n = snprintf(buf, sizeof(buf), "\x1b[%d;%dH║ \x1b[32m%-34s\x1b[0m ║", row + 1, startCol, "Saved!");
     write(STDOUT_FILENO, buf, n);
 
     // │ Message line (dynamic text)
@@ -63,8 +63,56 @@ static void notifySaved(ViewPort *view, char *msg) {
     write(STDOUT_FILENO, buf, n);
 
 }
+static void notifyWarning(ViewPort *view, char *msg) {
+    int boxWidth = 42;
+    int startCol = view->width - boxWidth - 1;
+    int row = 3;
 
+    char buf[256];
+    int n;
 
+    // ┌ Top line
+    n = snprintf(buf, sizeof(buf), "\x1b[%d;%dH╔════════════════════════════════════╗", row, startCol);
+    write(STDOUT_FILENO, buf, n);
+
+    // │ Title line
+    n = snprintf(buf, sizeof(buf), "\x1b[%d;%dH║ \x1b[33m%-34s\x1b[0m ║", row + 1, startCol, "Warning!");
+    write(STDOUT_FILENO, buf, n);
+
+    // │ Message line (dynamic text)
+    n = snprintf(buf, sizeof(buf), "\x1b[%d;%dH║ %-34s ║", row + 2, startCol, msg);
+    write(STDOUT_FILENO, buf, n);
+
+    // └ Bottom line
+    n = snprintf(buf, sizeof(buf), "\x1b[%d;%dH╚════════════════════════════════════╝", row + 3, startCol);
+    write(STDOUT_FILENO, buf, n);
+
+}
+static void notifyHint(ViewPort *view, char *msg) {
+    int boxWidth = 42;
+    int startCol = view->width - boxWidth - 1;
+    int row = 3;
+
+    char buf[256];
+    int n;
+
+    // ┌ Top line
+    n = snprintf(buf, sizeof(buf), "\x1b[%d;%dH╔════════════════════════════════════╗", row, startCol);
+    write(STDOUT_FILENO, buf, n);
+
+    // │ Title line
+    n = snprintf(buf, sizeof(buf), "\x1b[%d;%dH║ \x1b[34m%-34s\x1b[0m ║", row + 1, startCol, "Hint!");
+    write(STDOUT_FILENO, buf, n);
+
+    // │ Message line (dynamic text)
+    n = snprintf(buf, sizeof(buf), "\x1b[%d;%dH║ %-34s ║", row + 2, startCol, msg);
+    write(STDOUT_FILENO, buf, n);
+
+    // └ Bottom line
+    n = snprintf(buf, sizeof(buf), "\x1b[%d;%dH╚════════════════════════════════════╝", row + 3, startCol);
+    write(STDOUT_FILENO, buf, n);
+
+}
 
 void notify(Notification *notif, ViewPort *view) {
 
@@ -92,8 +140,10 @@ void notify(Notification *notif, ViewPort *view) {
             notifyError(view, notif->msg);
             break;
         case NOTIFY_HINT:
+            notifyHint(view, notif->msg);
             break;
         case NOTIFY_WARNING:
+            notifyWarning(view, notif->msg);
             break;
         case NOTIFY_SAVED:
             notifySaved(view, notif->msg);
