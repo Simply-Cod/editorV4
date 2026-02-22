@@ -25,6 +25,22 @@ int main(int argc, char *argv[1]) {
     ViewPort view;
     viewInit(&view);
 
+    Line *command = malloc(sizeof(Line));
+    command->buffer = malloc(sizeof(char) * LINE_CAP_32);
+    if (!command->buffer) {
+        perror("Failed to allocate for command buffer");
+        exit(1);
+    }
+    command->capacity = LINE_CAP_32;
+    command->arrLength = 0;
+    command->previous = NULL;
+    command->next = NULL;
+    command->arrPos = 0;
+    command->buffer[0] = '\0';
+
+    enum CommandFunction cmdFunction = CMD_NONE;
+    int cmdViewCurX = 0;
+
     if (!terminalEnableRaw(&term)) exit(1);
 
     unsigned int input;
@@ -117,6 +133,9 @@ int main(int argc, char *argv[1]) {
                         info.mode = INSERT;
                         info.dirty = true;
                         view.render = RENDER_FULL;
+                        break;
+                    case ':':
+                        info.mode = COMMANDLINE;
                         break;
                 }
 
@@ -220,6 +239,54 @@ int main(int argc, char *argv[1]) {
                 }
 
                 break;
+            case COMMANDLINE: /*----------------- COMMANDLINE MODE -------------------*/
+                switch (input) {
+                    case 0:
+                        break;
+                    case ESC:
+                        info.mode = NORMAL;
+                        command->buffer[0] = '\0';
+                        command->arrLength = 0;
+                        command->arrPos = 0;
+                        cmdViewCurX = 0;
+                        break;
+                    case 32 ... 126: // ascii 1 byte range
+                    case 128 ... 247: // multi bytes range
+                        lineInsertChar(&command, input);
+                        cmdViewCurX++;
+                        break;
+                    case BACKSPACE:
+                        if (command->arrPos <= 0) break;
+
+                        lineRemoveChar(&command);
+                        cmdViewCurX--;
+                        break;
+                    case LEFT:
+                        if (lineMoveLeft(&command)) {
+                            cmdViewCurX--;
+                        }
+                        break;
+                    case RIGHT:
+                        if (lineMoveRight(&command)) {
+                            cmdViewCurX++;
+                        }
+                    case ENTER:
+                        switch (cmdFunction) {
+                            case CMD_NONE:
+                                break;
+                            case CMD_GET_FILENAME:
+                                break;
+                            case CMD_GET_COMMAND:
+                                break;
+                        }
+                        info.mode = NORMAL;
+                        command->buffer[0] = '\0';
+                        command->arrLength = 0;
+                        command->arrPos = 0;
+                        cmdViewCurX = 0;
+                        break;
+                }
+                break;
         } /*------------ MODE END ------------*/
 
 
@@ -228,11 +295,18 @@ int main(int argc, char *argv[1]) {
         viewUpdate(&view, &info);
 
         write(STDOUT_FILENO, "\x1b[?25l", 6); // Hide cursor
-        viewDraw(&view, &buff, &info);
-        viewDrawStatusLine(&view, &buff, &info);
+        if (info.mode == NORMAL || info.mode == INSERT) {
+            viewDraw(&view, &buff, &info);
+            viewDrawStatusLine(&view, &buff, &info);
+            viewPlaceCursorOnCurrent(&view);
+            viewSetCursorStyle(&info);
+        } else if (info.mode == COMMANDLINE) {
+            write(STDOUT_FILENO, "\x1b[6 q", 5); // I cursor
+            viewDrawCommandStatus(&command, cmdFunction, &view);
+            viewDrawCommand(&command, cmdFunction, &view);
+            viewCommandSetCursor(command, &view, cmdViewCurX);
+        }
 
-        viewPlaceCursorOnCurrent(&view);
-        viewSetCursorStyle(&info);
         write(STDOUT_FILENO, "\x1b[?25h", 6); // Show cursor
         fflush(stdout);
 
@@ -247,7 +321,9 @@ int main(int argc, char *argv[1]) {
     if (info.fileName != NULL) {
         free(info.fileName);
     }
-
+    if (command->buffer) {
+        free(command->buffer);
+    }
     buffFreeAll(&buff);
     terminalDisableRaw(&term);
     return 0;

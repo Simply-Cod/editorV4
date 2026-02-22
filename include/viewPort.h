@@ -44,3 +44,8 @@ void viewPlaceCursorOnCurrent(ViewPort *view);
 
 void viewPrintLine(Line *line);
 int viewMoveCurOnY(Line *oldLine, Line *newLine);
+
+
+void viewDrawCommandStatus(Line **line, enum CommandFunction cmdFunc, ViewPort *view);
+void viewDrawCommand(Line **line, enum CommandFunction cmdFunc, ViewPort *view);
+void viewCommandSetCursor(Line *line, ViewPort *view, int curX);

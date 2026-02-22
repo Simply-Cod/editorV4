@@ -13,6 +13,12 @@ typedef struct Line {
     struct Line *previous;
 }Line;
 
+enum CommandFunction {
+    CMD_NONE,
+    CMD_GET_FILENAME,
+    CMD_GET_COMMAND,
+};
+
 /*------ Functions for insert mode ------*/
 
 int lineInsertChar(Line **line, unsigned char ch);

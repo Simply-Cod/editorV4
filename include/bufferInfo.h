@@ -5,6 +5,7 @@
 enum EditorMode {
     NORMAL,
     INSERT,
+    COMMANDLINE,
 };
 
 typedef struct BufferInfo {

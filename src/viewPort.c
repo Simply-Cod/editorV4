@@ -1,6 +1,7 @@
 #include "viewPort.h"
 #include "buffer.h"
 #include "bufferInfo.h"
+#include "line.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -196,7 +197,43 @@ void viewDrawStatusLine(ViewPort *view, Buffer *buff, BufferInfo *info) {
     if (info->dirty) {
         write(STDOUT_FILENO, " [+]", 4);
     }
+    write(STDOUT_FILENO, "\n\x1b[2K", 5);
 
+}
+
+void viewDrawCommandStatus(Line **line, enum CommandFunction cmdFunc, ViewPort *view) {
+
+    char pos[32];
+    int nPos = snprintf(pos, sizeof(pos), "\x1b[%d;0H\x1b[2K", view->height - 1);
+    write(STDOUT_FILENO, pos, nPos);
+    write(STDOUT_FILENO, "-- \x1b[42mCOMMAND MODE\x1b[0m --", 27);
+
+    switch (cmdFunc) {
+        case CMD_NONE:
+            break;
+        case CMD_GET_COMMAND:
+            break;
+        case CMD_GET_FILENAME:
+            write(STDOUT_FILENO, "\t Please Enter file Name", 24);
+            break;
+    }
+}
+
+void viewDrawCommand(Line **line, enum CommandFunction cmdFunc, ViewPort *view) {
+
+    char pos[32];
+    int nPos = snprintf(pos, sizeof(pos), "\x1b[%d;0H\x1b[2K", view->height);
+    write(STDOUT_FILENO, pos, nPos);
+    write(STDOUT_FILENO, " > ", 3);
+
+    viewPrintLine(*line);
+}
+
+void viewCommandSetCursor(Line *line, ViewPort *view, int curX) {
+    const int offset = 4;
+    char cursor[32];
+    int n = snprintf(cursor, sizeof(cursor), "\x1b[%d;%dH", view->height, curX + offset);
+    write(STDOUT_FILENO, cursor, n);
 }
 
 void viewPrintLine(Line *line) {
