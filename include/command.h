@@ -3,4 +3,4 @@
 #include "bufferInfo.h"
 #include "line.h"
 
-int commandSetFileName(BufferInfo *info, Line *line);
+int commandSetFileName(BufferInfo *info, Line **line);

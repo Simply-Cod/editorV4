@@ -191,13 +191,15 @@ void viewDrawStatusLine(ViewPort *view, Buffer *buff, BufferInfo *info) {
         strcpy(name, "<no name>");
     }
 
-    int nameLen = strlen(name);
-    write(STDOUT_FILENO, name, nameLen);
+    char fName[256];
+    int n = snprintf(fName, sizeof(fName), "%s ", name);
+
+    write(STDOUT_FILENO, fName, n);
 
     if (info->dirty) {
         write(STDOUT_FILENO, " [+]", 4);
     }
-    write(STDOUT_FILENO, "\n\x1b[2K", 5);
+     write(STDOUT_FILENO, "\n\x1b[2K", 5);
 
 }
 

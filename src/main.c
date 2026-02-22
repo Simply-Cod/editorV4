@@ -296,7 +296,7 @@ int main(int argc, char *argv[1]) {
                             case CMD_NONE:
                                 break;
                             case CMD_GET_FILENAME:
-                                commandSetFileName(&info, command);
+                                commandSetFileName(&info, &command);
 
                                 if (info.hasFileName && info.dirty) {
                                     buffWriteFile(&buff, info.fileName);

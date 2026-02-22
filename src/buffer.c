@@ -84,7 +84,6 @@ int buffAddLineBelowCurrent(Buffer *buff, BufferInfo *info) {
 
     info->lineCount++;
     info->currentLineNumber++;
-    info->dirty = true;
 
     buff->current = buff->current->next;
 
@@ -145,7 +144,6 @@ void bufferDeleteLine(Buffer *buff, BufferInfo *info, Line **toDelete) {
     free(l);
 
     info->lineCount--;
-    info->dirty = true;
 }
 
 int buffLoadFromFile(Buffer *buff, BufferInfo *info) {

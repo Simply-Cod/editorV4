@@ -24,10 +24,12 @@ int handleArgs(BufferInfo *info, int argc, char *argv[]) {
         struct stat st;
 
         if (stat(argv[1], &st) == 0) {
+            int len = strlen(argv[1]);
 
             if (S_ISREG(st.st_mode)) { // is a file
 
-                info->fileName = strndup(argv[1], strlen(argv[1]));
+                info->fileName = strndup(argv[1], len);
+                info->fileName[len] = '\0';
 
                 if (!info->fileName) return 0;
 
@@ -46,9 +48,11 @@ int handleArgs(BufferInfo *info, int argc, char *argv[]) {
             }
         } else { // set as file name
 
+            int len = strlen(argv[1]);
             info->fileName = strndup(argv[1], strlen(argv[1]));
             if (!info->fileName) return 0;
 
+            info->fileName[len] = '\0';
             info->hasFileName = true;
             return 1;
         }
