@@ -91,6 +91,7 @@ int main(int argc, char *argv[1]) {
                         break;
                     case CTRL_U:
                         motion_scrollHalfPageUp(&view, &buff, &info);
+                        view.render = RENDER_FULL;
                         break;
                     case DOWN:
                     case 'j':
@@ -103,15 +104,18 @@ int main(int argc, char *argv[1]) {
                         break;
                     case CTRL_D:
                         motion_scrollHalfPageDown(&view, &buff, &info);
+                        view.render = RENDER_FULL;
                         break;
                     case 'o':
                         buffAddLineBelowCurrent(&buff, &info);
                         info.mode = INSERT;
+                        info.dirty = true;
                         view.render = RENDER_FULL;
                         break;
                     case 'O':
                         bufferAddLineAboveCurrent(&buff, &info);
                         info.mode = INSERT;
+                        info.dirty = true;
                         view.render = RENDER_FULL;
                         break;
                 }
@@ -144,6 +148,7 @@ int main(int argc, char *argv[1]) {
                         lineInsertChar(&buff.current, input);
                         view.curX++;
                         buff.prefArrPos = buff.current->arrPos;
+                        info.dirty = true;
                         break;
                     case BACKSPACE:
                         if (buff.current->arrPos <= 0) {
@@ -171,6 +176,7 @@ int main(int argc, char *argv[1]) {
                                 buff.prefArrPos = buff.current->arrPos;
                             }
                         }
+                        info.dirty = true;
                         break;
                     case LEFT:
                         if (lineMoveLeft(&buff.current)) {
@@ -209,6 +215,7 @@ int main(int argc, char *argv[1]) {
                             lineMoveBuff(&buff.current->previous, &buff.current, count);
                         }
                         view.render = RENDER_FULL;
+                        info.dirty = true;
                         break;
                 }
 

@@ -179,9 +179,23 @@ void viewDrawStatusLine(ViewPort *view, Buffer *buff, BufferInfo *info) {
     write(STDOUT_FILENO, pos, nPos);
 
     char mode[64];
-    int nMode = snprintf(mode, sizeof(mode), "-- %s MODE\x1b[0m --",
+    int nMode = snprintf(mode, sizeof(mode), "-- %s MODE\x1b[0m --\t",
             (info->mode == INSERT) ? "\x1b[41mINSERT" : "\x1b[44mNORMAL");
     write(STDOUT_FILENO, mode, nMode);
+
+    char name[128];
+    if (info->hasFileName) {
+        strncpy(name, info->fileName, strlen(info->fileName));
+    } else {
+        strcpy(name, "<no name>");
+    }
+
+    int nameLen = strlen(name);
+    write(STDOUT_FILENO, name, nameLen);
+
+    if (info->dirty) {
+        write(STDOUT_FILENO, " [+]", 4);
+    }
 
 }
 
