@@ -5,6 +5,7 @@
 #include "terminal.h"
 #include "viewPort.h"
 #include "motions.h"
+#include "command.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -137,6 +138,16 @@ int main(int argc, char *argv[1]) {
                     case ':':
                         info.mode = COMMANDLINE;
                         break;
+                    case CTRL_S:
+                        if (!info.hasFileName) {
+                            info.mode = COMMANDLINE;
+                            cmdFunction = CMD_GET_FILENAME;
+                        } else {
+                            if (buffWriteFile(&buff, info.fileName)) {
+                                info.dirty = false;
+                            }
+                        }
+                        break;
                 }
 
                 char c = buff.current->buffer[buff.current->arrPos];
@@ -236,6 +247,16 @@ int main(int argc, char *argv[1]) {
                         view.render = RENDER_FULL;
                         info.dirty = true;
                         break;
+                    case CTRL_S:
+                        if (!info.hasFileName) {
+                            info.mode = COMMANDLINE;
+                            cmdFunction = CMD_GET_FILENAME;
+                        } else {
+                            if (buffWriteFile(&buff, info.fileName)) {
+                                info.dirty = false;
+                            }
+                        }
+                        break;
                 }
 
                 break;
@@ -275,6 +296,13 @@ int main(int argc, char *argv[1]) {
                             case CMD_NONE:
                                 break;
                             case CMD_GET_FILENAME:
+                                commandSetFileName(&info, command);
+
+                                if (info.hasFileName && info.dirty) {
+                                    buffWriteFile(&buff, info.fileName);
+                                    info.dirty = false;
+                                    cmdFunction = CMD_NONE;
+                                }
                                 break;
                             case CMD_GET_COMMAND:
                                 break;

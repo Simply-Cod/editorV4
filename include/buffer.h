@@ -20,4 +20,5 @@ int bufferAddLineAboveCurrent(Buffer *buff, BufferInfo *info);
 
 
 int buffLoadFromFile(Buffer *buff, BufferInfo *info);
+int buffWriteFile(Buffer *buff, char *fileName);
 void bufferSetPrefArrPos(Buffer *buff);
