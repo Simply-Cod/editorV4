@@ -6,6 +6,7 @@
 #include "viewPort.h"
 #include "motions.h"
 #include "command.h"
+#include "notification.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,6 +43,15 @@ int main(int argc, char *argv[1]) {
     enum CommandFunction cmdFunction = CMD_NONE;
     int cmdViewCurX = 0;
 
+    Notification notif;
+    notif.type = NOTIFY_NONE;
+    notif.msg = malloc(sizeof(char) * 32);
+    notif.started = false;
+    if (!notif.msg) {
+        perror("Failed to allocate for notifications");
+        exit(1);
+    }
+
     if (!terminalEnableRaw(&term)) exit(1);
 
     unsigned int input;
@@ -74,6 +84,9 @@ int main(int argc, char *argv[1]) {
                     case CTRL_Q:
                         quit = true;
                         break;
+                    case '!':
+                        notifySet(&notif, NOTIFY_ERROR, "This is just a test");
+                            break;
                     case 'i':
                         info.mode = INSERT;
                         break;
@@ -142,6 +155,7 @@ int main(int argc, char *argv[1]) {
                         } else {
                             if (buffWriteFile(&buff, info.fileName)) {
                                 info.dirty = false;
+                                notifySet(&notif, NOTIFY_SAVED, "File saved successfully!");
                             }
                         }
                         break;
@@ -242,6 +256,7 @@ int main(int argc, char *argv[1]) {
                         } else {
                             if (buffWriteFile(&buff, info.fileName)) {
                                 info.dirty = false;
+                                notifySet(&notif, NOTIFY_SAVED, "File saved successfully!");
                             }
                         }
                         break;
@@ -290,6 +305,7 @@ int main(int argc, char *argv[1]) {
                                     buffWriteFile(&buff, info.fileName);
                                     info.dirty = false;
                                     cmdFunction = CMD_NONE;
+                                    notifySet(&notif, NOTIFY_SAVED, "File saved successfully!");
                                 }
                                 break;
                             case CMD_GET_COMMAND:
@@ -311,6 +327,10 @@ int main(int argc, char *argv[1]) {
         if (buff.current->arrLength > 0 && c == '\0' && info.mode == NORMAL) {
             lineMoveLeft(&buff.current);
         }
+        if (notif.type == NOTIFY_CLEAR) {
+            view.render = RENDER_FULL;
+            notif.type = NOTIFY_NONE;
+        }
 
         viewGetTerminalSize(&view);
         viewCorrectCursor(&view, &buff);
@@ -320,6 +340,12 @@ int main(int argc, char *argv[1]) {
         if (info.mode == NORMAL || info.mode == INSERT) {
             viewDraw(&view, &buff, &info);
             viewDrawStatusLine(&view, &buff, &info);
+
+            // Testing
+            if (notif.type != NOTIFY_NONE) {
+                notify(&notif, &view);
+            }
+
             viewPlaceCursorOnCurrent(&view);
             viewSetCursorStyle(&info);
         } else if (info.mode == COMMANDLINE) {
@@ -346,6 +372,7 @@ int main(int argc, char *argv[1]) {
     if (command->buffer) {
         free(command->buffer);
     }
+    free(notif.msg);
     buffFreeAll(&buff);
     terminalDisableRaw(&term);
     return 0;

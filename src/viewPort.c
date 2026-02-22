@@ -252,23 +252,6 @@ void viewPrintLine(Line *line) {
 
 }
 
-void tmpViewDraw(ViewPort *view, Buffer *buff) {
-
-    Line *printPtr = buff->current;
-
-    write(STDOUT_FILENO, "\x1b[H\x1b[2J", 7); // Move cursor to beginning
-
-    write(STDOUT_FILENO, printPtr->buffer, strlen(printPtr->buffer));
-
-    char test[64];
-    int t = snprintf(test, sizeof(test), "\n\ncurrent char: %c", buff->current->buffer[buff->current->arrPos]);
-    write(STDOUT_FILENO, test, t);
-
-    char cursor[32];
-    int n = snprintf(cursor, sizeof(cursor), "\x1b[%d;%dH", view->curY, view->curX + 1);
-    write(STDOUT_FILENO, cursor, n);
-}
-
 void viewSetCursorStyle(BufferInfo *info) {
 
     if (info->mode == NORMAL) {

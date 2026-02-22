@@ -28,7 +28,6 @@ int viewGetTerminalSize(ViewPort *view);
 
 void viewUpdate(ViewPort *view, BufferInfo *info);
 
-void tmpViewDraw(ViewPort *view, Buffer *buff);
 void viewSetCursorStyle(BufferInfo *info);
 void viewCorrectCursor(ViewPort *view, Buffer *buff);
 
