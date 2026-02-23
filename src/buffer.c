@@ -199,11 +199,13 @@ int buffLoadFromFile(Buffer *buff, BufferInfo *info) {
     }
     fclose(file);
 
-    if (buff->current && buff->current->arrLength == 0) {
-        buff->current = buff->current->previous;
+    if (info->lineCount > 1) {
+        if (buff->current && buff->current->arrLength == 0) {
+            buff->current = buff->current->previous;
 
-        bufferDeleteLine(buff, info, &buff->current->next);
-        buff->current->next = NULL;
+            bufferDeleteLine(buff, info, &buff->current->next);
+            buff->current->next = NULL;
+        }
     }
 
 
