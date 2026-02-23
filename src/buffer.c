@@ -1,6 +1,8 @@
 #include "buffer.h"
 #include "bufferInfo.h"
 #include "line.h"
+#include "notification.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,16 +15,16 @@ void buffInit(Buffer *buff) {
 
 int buffCreateHead(Buffer *buff, BufferInfo *info) {
 
-    if (buff->head != NULL) return 0;
+    if (buff->head != NULL) return ERR_BUFF_CREATE_HEAD_NOT_NULL;
 
     buff->head = malloc(sizeof(Line));
 
-    if (!buff->head) return 0;
+    if (!buff->head) return ERR_BUFF_CREATE_HEAD_NULL;
 
     buff->head->buffer = malloc(sizeof(char) * LINE_CAP_32);
     if (!buff->head->buffer) {
         free(buff->head);
-        return 0;
+        return ERR_BUFF_CREATE_HEAD_BUFFER_NULL;
     }
 
     buff->head->buffer[0] = '\0';
@@ -59,12 +61,12 @@ void buffFreeAll(Buffer *buff) {
 int buffAddLineBelowCurrent(Buffer *buff, BufferInfo *info) {
 
     Line *new = malloc(sizeof(Line));
-    if (!new) return 0;
+    if (!new) return ERR_BUFF_ADD_LINE_NEW_NULL;
 
     new->buffer = malloc(sizeof(char) * LINE_CAP_32);
     if (!new->buffer) {
         free(new);
-        return 0;
+        return ERR_BUFF_ADD_LINE_NEW_NULL_BUFFER;
     }
     new->arrPos = 0;
     new->arrLength = 0;
@@ -93,12 +95,12 @@ int buffAddLineBelowCurrent(Buffer *buff, BufferInfo *info) {
 int bufferAddLineAboveCurrent(Buffer *buff, BufferInfo *info) {
 
     Line *new = malloc(sizeof(Line));
-    if (!new) return 0;
+    if (!new) return ERR_BUFF_ADD_LINE_NEW_NULL;
 
     new->buffer = malloc(sizeof(char) * LINE_CAP_32);
     if (!new->buffer) {
         free(new);
-        return 0;
+        return ERR_BUFF_ADD_LINE_NEW_NULL_BUFFER;
     }
     new->arrPos = 0;
     new->arrLength = 0;
@@ -152,7 +154,7 @@ int buffLoadFromFile(Buffer *buff, BufferInfo *info) {
     file = fopen(info->fileName, "r");
     int status = 0;
 
-    if (file == NULL) return status;
+    if (file == NULL) return ERR_BUFF_LOAD_FILE_FILE_NULL;
 
     buff->current = buff->head;
     info->lineCount = 1;
@@ -168,7 +170,7 @@ int buffLoadFromFile(Buffer *buff, BufferInfo *info) {
             buf[len - 1] = '\0';
             len--;
         }
-        status = -1;
+
         buff->current->buffer = malloc(len + 1);
 
         if (!buff->current->buffer) {
@@ -210,11 +212,11 @@ int buffLoadFromFile(Buffer *buff, BufferInfo *info) {
 
 int buffWriteFile(Buffer *buff, char *fileName) {
 
-    if (fileName == NULL) return 0;
+    if (fileName == NULL) return ERR_BUFF_WRITE_FILE_NO_NAME;
 
     FILE *file = fopen(fileName, "w");
 
-    if (file == NULL) return 0;
+    if (file == NULL) return ERR_BUFF_WRITE_FILE_NULL;
 
     Line *line = buff->head;
 

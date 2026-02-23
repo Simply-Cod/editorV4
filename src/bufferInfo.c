@@ -1,4 +1,5 @@
 #include "bufferInfo.h"
+#include "notification.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -31,7 +32,7 @@ int handleArgs(BufferInfo *info, int argc, char *argv[]) {
                 info->fileName = strndup(argv[1], len);
                 info->fileName[len] = '\0';
 
-                if (!info->fileName) return 0;
+                if (!info->fileName) return ERR_INFO_HANDLE_ARGS_MEM_FAIL;
 
                 info->hasFileName = true;
                 info->loadFile = true;
@@ -39,12 +40,12 @@ int handleArgs(BufferInfo *info, int argc, char *argv[]) {
             } else if (S_ISDIR(st.st_mode)) { // is a directory
 
                 if (chdir(argv[1]) != 0)
-                    return 0;
+                    return ERR_INFO_HANDLE_ARGS_CHDIR_FAIL;
                 else
                     return 1;
             } else { // Unknown
 
-                return 0;
+                return ERR_INFO_HANDLE_ARGS_UNKNOWN;
             }
         } else { // set as file name
 

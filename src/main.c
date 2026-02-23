@@ -2,11 +2,11 @@
 #include "bufferInfo.h"
 #include "input.h"
 #include "line.h"
+#include "notification.h"
 #include "terminal.h"
 #include "viewPort.h"
 #include "motions.h"
 #include "command.h"
-#include "notification.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,12 +17,17 @@ Terminal term;
 
 int main(int argc, char *argv[1]) {
 
+    Notification notif;
+    notifyInit(&notif);
+    int errCode = 0;
+
     Buffer buff;
     buffInit(&buff);
 
     BufferInfo info;
     infoInit(&info);
-    handleArgs(&info, argc, argv);
+    errCode = handleArgs(&info, argc, argv);
+    notifySetError(&notif, &errCode);
 
     ViewPort view;
     viewInit(&view);
@@ -43,14 +48,6 @@ int main(int argc, char *argv[1]) {
     enum CommandFunction cmdFunction = CMD_NONE;
     int cmdViewCurX = 0;
 
-    Notification notif;
-    notif.type = NOTIFY_NONE;
-    notif.msg = malloc(sizeof(char) * 32);
-    notif.started = false;
-    if (!notif.msg) {
-        perror("Failed to allocate for notifications");
-        exit(1);
-    }
 
     if (!terminalEnableRaw(&term)) exit(1);
 
@@ -59,10 +56,11 @@ int main(int argc, char *argv[1]) {
 
 
     // Set up buffer either with provided arg or a new one
-    buffCreateHead(&buff, &info);
+    errCode = buffCreateHead(&buff, &info);
+    notifySetError(&notif, &errCode);
     if (info.hasFileName && info.loadFile) {
-        if (!buffLoadFromFile(&buff, &info))
-            notifySet(&notif, NOTIFY_ERROR, "buffLoadFromFile failed");
+        errCode = buffLoadFromFile(&buff, &info);
+        notifySetError(&notif, &errCode);
         buff.current = buff.head;
         view.render = RENDER_FULL;
         info.currentLineNumber = 1;
@@ -82,21 +80,16 @@ int main(int argc, char *argv[1]) {
                 switch (input) {
                     case 0:
                         break;
+                    case '!':
+                        errCode = ERR_BUFF_CREATE_HEAD_NOT_NULL;
+                        break;
+                    case '?':
+                        errCode = ERR_INFO_HANDLE_ARGS_MEM_FAIL;
+                        break;
                     case CTRL_Q:
                         quit = true;
                         break;
-                    case '!':
-                        char debug_msg[32];
-                        snprintf(debug_msg, sizeof(debug_msg), "%s", info.fileName);
-                        notifySet(&notif, NOTIFY_ERROR, debug_msg);
-                            break;
-                    case '?':
-                            if (info.hasFileName)
-                                notifySet(&notif, NOTIFY_ERROR, "File name is set");
-                            else
-                                notifySet(&notif, NOTIFY_ERROR, "filename bool not set");
-                            break;
-                    case 'i':
+                        case 'i':
                         info.mode = INSERT;
                         break;
                     case 'a':
@@ -164,7 +157,6 @@ int main(int argc, char *argv[1]) {
                         } else {
                             if (buffWriteFile(&buff, info.fileName)) {
                                 info.dirty = false;
-                                notifySet(&notif, NOTIFY_SAVED, "File saved successfully!");
                             }
                         }
                         break;
@@ -265,7 +257,6 @@ int main(int argc, char *argv[1]) {
                         } else {
                             if (buffWriteFile(&buff, info.fileName)) {
                                 info.dirty = false;
-                                notifySet(&notif, NOTIFY_SAVED, "File saved successfully!");
                             }
                         }
                         break;
@@ -314,7 +305,6 @@ int main(int argc, char *argv[1]) {
                                     buffWriteFile(&buff, info.fileName);
                                     info.dirty = false;
                                     cmdFunction = CMD_NONE;
-                                    notifySet(&notif, NOTIFY_SAVED, "File saved successfully!");
                                 }
                                 break;
                             case CMD_GET_COMMAND:
@@ -336,10 +326,11 @@ int main(int argc, char *argv[1]) {
         if (buff.current->arrLength > 0 && c == '\0' && info.mode == NORMAL) {
             lineMoveLeft(&buff.current);
         }
-        if (notif.type == NOTIFY_CLEAR) {
+        if (notif.clear) {
             view.render = RENDER_FULL;
-            notif.type = NOTIFY_NONE;
+            notif.clear = false;
         }
+        notifySetError(&notif, &errCode);
 
         viewGetTerminalSize(&view);
         viewCorrectCursor(&view, &buff);
@@ -351,9 +342,8 @@ int main(int argc, char *argv[1]) {
             viewDrawStatusLine(&view, &buff, &info);
 
             // Testing
-            if (notif.type != NOTIFY_NONE) {
-                notify(&notif, &view);
-            }
+            notifyUpdate(&notif);
+            notify(&notif, &view);
 
             viewPlaceCursorOnCurrent(&view);
             viewSetCursorStyle(&info);
@@ -381,8 +371,8 @@ int main(int argc, char *argv[1]) {
     if (command->buffer) {
         free(command->buffer);
     }
-    free(notif.msg);
     buffFreeAll(&buff);
+    notifyFree(&notif);
     terminalDisableRaw(&term);
     return 0;
 }
