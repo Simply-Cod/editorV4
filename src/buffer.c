@@ -150,8 +150,9 @@ int buffLoadFromFile(Buffer *buff, BufferInfo *info) {
 
     FILE *file;
     file = fopen(info->fileName, "r");
+    int status = 0;
 
-    if (file == NULL) return 0;
+    if (file == NULL) return status;
 
     buff->current = buff->head;
     info->lineCount = 1;
@@ -167,14 +168,14 @@ int buffLoadFromFile(Buffer *buff, BufferInfo *info) {
             buf[len - 1] = '\0';
             len--;
         }
-
+        status = -1;
         buff->current->buffer = malloc(len + 1);
 
         if (!buff->current->buffer) {
             fclose(file);
             buffFreeAll(buff);
             info->lineCount = 0;
-            return 0;
+            return status;
         }
 
         strcpy(buff->current->buffer, buf);

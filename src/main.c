@@ -61,7 +61,8 @@ int main(int argc, char *argv[1]) {
     // Set up buffer either with provided arg or a new one
     buffCreateHead(&buff, &info);
     if (info.hasFileName && info.loadFile) {
-        buffLoadFromFile(&buff, &info);
+        if (!buffLoadFromFile(&buff, &info))
+            notifySet(&notif, NOTIFY_ERROR, "buffLoadFromFile failed");
         buff.current = buff.head;
         view.render = RENDER_FULL;
         info.currentLineNumber = 1;
@@ -88,6 +89,12 @@ int main(int argc, char *argv[1]) {
                         char debug_msg[32];
                         snprintf(debug_msg, sizeof(debug_msg), "%s", info.fileName);
                         notifySet(&notif, NOTIFY_ERROR, debug_msg);
+                            break;
+                    case '?':
+                            if (info.hasFileName)
+                                notifySet(&notif, NOTIFY_ERROR, "File name is set");
+                            else
+                                notifySet(&notif, NOTIFY_ERROR, "filename bool not set");
                             break;
                     case 'i':
                         info.mode = INSERT;

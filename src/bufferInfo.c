@@ -59,3 +59,39 @@ int handleArgs(BufferInfo *info, int argc, char *argv[]) {
     }
     return 1;
 }
+
+int infoCheckExtension(BufferInfo *info) {
+
+    if (!info->hasFileName) {
+        info->extension = EXT_NONE;
+        return 1;
+    }
+    if (info->fileName == NULL) {
+        info->extension = EXT_NONE;
+        return 1;
+    }
+
+    const char *ext = strrchr(info->fileName, '.');
+
+    if (ext && ext != info->fileName) {
+        int exCount = 3;
+        char *extensions[] = {
+            ".txt",
+            ".c",
+            ".h"
+        };
+
+        for (int i = 0; i < exCount; i++) {
+            if (strcmp(ext, extensions[i])) {
+                info->extension = i;
+                return 1;
+            }
+        }
+
+    } else {
+        info->extension = EXT_NONE;
+        return 0;
+    }
+
+    return 1;
+}
