@@ -191,12 +191,16 @@ void notifySet(Notification *notif, enum NotifyType type, char *msg) {
     }
     new->type = type;
 
-    Notif_Node *current = notif->head;
+    if (notif->head == NULL) {
+        notif->head = new;
+    } else {
+        Notif_Node *current = notif->head;
 
-    while (current->next != NULL) {
-        current = current->next;
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = new;
     }
-    current->next = new;
     notif->count++;
 }
 
