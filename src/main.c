@@ -366,7 +366,7 @@ int main(int argc, char *argv[1]) {
     }
 
     write(STDOUT_FILENO, "\x1b[2 q", 5); // Block
-    write(STDOUT_FILENO, "\x1b[H\x1b[2K", 7); // clear
+    write(STDOUT_FILENO, "\x1b[H\x1b[2J", 7); // clear
 
     if (info.fileName != NULL) {
         free(info.fileName);
